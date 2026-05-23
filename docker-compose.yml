@@ -1,0 +1,142 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TicketAI — Development Docker Compose
+# Starts: MongoDB, Express Backend, React Frontend, Nginx Reverse Proxy
+#
+# Usage:
+#   docker-compose up -d          # Start all services in background
+#   docker-compose logs -f        # Stream logs from all services
+#   docker-compose down -v        # Stop and remove volumes
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ─── MongoDB ───────────────────────────────────────────────────────────────
+  mongodb:
+    image: mongo:7
+    container_name: ticketai-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"           # Exposed in dev for MongoDB Compass / Studio 3T
+    environment:
+      MONGO_INITDB_DATABASE: ticketai
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')", "--quiet"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # ─── Redis ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: ticketai-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"              # Exposed in dev for Redis Insight / CLI
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ─── Backend (Node.js + Express) ───────────────────────────────────────────
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: builder          # Use builder stage in dev for devDependencies (nodemon)
+    container_name: ticketai-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"            # Direct access for development/debugging
+    env_file:
+      - ./server/.env
+    environment:
+      NODE_ENV: development
+      MONGODB_URI: mongodb://mongodb:27017/ticketai
+      PORT: 5000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      - ./server:/app          # Mount source for hot-reload with nodemon
+      - /app/node_modules      # Anonymous volume prevents host node_modules from shadowing
+    command: ["node_modules/.bin/nodemon", "index.js"]
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ─── Frontend (React + Vite served via Nginx) ───────────────────────────────
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: ticketai-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"              # Direct access on port 3000 in development
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ─── Nginx (Reverse Proxy) ─────────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: ticketai-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"                # Primary entry point — routes to frontend or backend
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+# ─── Networks ──────────────────────────────────────────────────────────────
+networks:
+  app-network:
+    driver: bridge
+
+# ─── Volumes ───────────────────────────────────────────────────────────────
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+  redis_data:
+    driver: local
