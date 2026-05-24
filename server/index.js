@@ -9,6 +9,7 @@
 // Must be loaded before any other module so all env vars are available
 const config = require('./config/env');
 const logger = require('./config/logger');
+const path   = require('path');
 
 // ── Process-level Error Guards ────────────────────────────────────────────────
 
@@ -125,14 +126,21 @@ function createApp() {
   app.use('/api/projects',       require('./routes/projectRoutes'));
   app.use('/api/notifications',  require('./routes/notificationRoutes'));
 
-  // ── 404 handler ──────────────────────────────────────────────────────────
-  app.use((_req, res) => {
-    res.status(404).json({
-      success: false,
-      message: `Route ${_req.method} ${_req.originalUrl} not found`,
-      code: 'ROUTE_NOT_FOUND',
+  // ── Static frontend (production only) ───────────────────────────────────
+  if (config.isProd) {
+    const distPath = path.join(__dirname, '..', 'client', 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
+  } else {
+    // ── 404 handler (dev only — prod uses SPA fallback above) ──────────────
+    app.use((_req, res) => {
+      res.status(404).json({
+        success: false,
+        message: `Route ${_req.method} ${_req.originalUrl} not found`,
+        code: 'ROUTE_NOT_FOUND',
+      });
     });
-  });
+  }
 
   // ── Central error handler (must be last) ─────────────────────────────────
   app.use(errorHandler);
