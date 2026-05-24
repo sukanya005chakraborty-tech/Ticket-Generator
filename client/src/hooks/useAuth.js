@@ -2,15 +2,20 @@ import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/authStore';
+import { useProjectStore } from '../store/projectStore';
+import queryClient from '../lib/queryClient';
 import * as authService from '../services/authService';
 
 export function useAuth() {
   const navigate = useNavigate();
   const { user, isAuthenticated, isLoading, login: storeLogin, logout: storeLogout, setLoading } = useAuthStore();
+  const clearProject = useProjectStore((s) => s.clearProject);
 
   const login = useCallback(async (credentials) => {
     setLoading(true);
     try {
+      queryClient.clear();
+      clearProject();
       const response = await authService.login(credentials);
       const { user, accessToken } = response.data;
       storeLogin(user, accessToken);
@@ -23,7 +28,7 @@ export function useAuth() {
     } finally {
       setLoading(false);
     }
-  }, [storeLogin, setLoading, navigate]);
+  }, [storeLogin, setLoading, navigate, clearProject]);
 
   const register = useCallback(async (userData) => {
     setLoading(true);
@@ -46,11 +51,13 @@ export function useAuth() {
     } catch {
       // Ignore logout errors — always clear local state
     } finally {
+      queryClient.clear();
+      clearProject();
       storeLogout();
       toast.success('Logged out successfully');
       navigate('/login');
     }
-  }, [storeLogout, navigate]);
+  }, [storeLogout, navigate, clearProject]);
 
   return {
     user,
