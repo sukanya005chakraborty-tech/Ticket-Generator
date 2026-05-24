@@ -54,7 +54,7 @@ jobs:
       - name: Run ESLint
         run: |
           if [ -f ".eslintrc.js" ] || [ -f ".eslintrc.cjs" ] || [ -f "eslint.config.js" ]; then
-            npx eslint . --ext .js --max-warnings 0
+            npx eslint@8 . --ext .js --max-warnings 0
           else
             echo "No ESLint config found — skipping lint step"
           fi
