@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Activity, RefreshCw, User, Search } from 'lucide-react';
 import { useActivityLogs } from '../hooks/useAdmin';
-import { ActivityLog } from '../components/ui/LoadingSkeleton';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
