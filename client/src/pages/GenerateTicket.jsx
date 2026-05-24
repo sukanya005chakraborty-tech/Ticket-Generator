@@ -52,6 +52,7 @@ export default function GenerateTicket() {
         device: device || undefined,
         assignedTo: assignedTo || undefined,
         dueDate: dueDate || undefined,
+        projectId: selectedProjectId || undefined,
       });
       const ticket = response?.data?.ticket;
       if (ticket) {

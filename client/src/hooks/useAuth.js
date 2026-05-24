@@ -28,11 +28,9 @@ export function useAuth() {
   const register = useCallback(async (userData) => {
     setLoading(true);
     try {
-      const response = await authService.register(userData);
-      const { user, accessToken } = response.data;
-      storeLogin(user, accessToken);
-      toast.success(`Welcome to BugForge, ${user.name}!`);
-      navigate('/dashboard');
+      await authService.register(userData);
+      toast.success('Account created! Please log in.');
+      navigate('/login');
       return { success: true };
     } catch (error) {
       toast.error(error.message || 'Registration failed. Please try again.');
@@ -40,7 +38,7 @@ export function useAuth() {
     } finally {
       setLoading(false);
     }
-  }, [storeLogin, setLoading, navigate]);
+  }, [setLoading, navigate]);
 
   const logout = useCallback(async () => {
     try {
