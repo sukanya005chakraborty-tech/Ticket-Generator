@@ -125,6 +125,7 @@ function createApp() {
   app.use('/api/settings',       require('./routes/settingsRoutes'));
   app.use('/api/projects',       require('./routes/projectRoutes'));
   app.use('/api/notifications',  require('./routes/notificationRoutes'));
+  app.use('/api/admin',          require('./routes/adminRoutes'));
 
   // ── Static frontend (production only) ───────────────────────────────────
   if (config.isProd) {

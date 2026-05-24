@@ -105,8 +105,9 @@ export default function Profile() {
 
   const onPasswordSubmit = async (data) => {
     await updatePassword({
-      currentPassword: data.currentPassword,
-      newPassword: data.newPassword,
+      currentPassword:  data.currentPassword,
+      newPassword:      data.newPassword,
+      confirmPassword:  data.confirmPassword,
     });
     resetPassword();
   };

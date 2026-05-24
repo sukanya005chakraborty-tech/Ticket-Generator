@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Sparkles, List, Kanban, BarChart2,
   Settings, User, LogOut, ChevronLeft, ChevronRight,
-  FolderOpen, ChevronDown, Plus, Check,
+  FolderOpen, ChevronDown, Plus, Check, Activity,
 } from 'lucide-react';
 import { useUiStore }      from '../../store/uiStore';
 import { useAuthStore }    from '../../store/authStore';
@@ -19,7 +19,8 @@ const NAV_ITEMS = [
   { label: 'Ticket History', icon: List,            to: '/tickets' },
   { label: 'Kanban Board',   icon: Kanban,          to: '/board' },
   { label: 'Analytics',      icon: BarChart2,       to: '/analytics' },
-  { label: 'Projects',       icon: FolderOpen,      to: '/projects', adminOnly: true },
+  { label: 'Projects',       icon: FolderOpen,      to: '/projects',       adminOnly: true },
+  { label: 'Activity Logs', icon: Activity,        to: '/activity-logs', adminOnly: true },
   { label: 'Settings',       icon: Settings,        to: '/settings' },
   { label: 'Profile',        icon: User,            to: '/profile' },
 ];

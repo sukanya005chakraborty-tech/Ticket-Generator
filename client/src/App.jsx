@@ -15,6 +15,7 @@ import Settings from './pages/Settings';
 import Profile from './pages/Profile';
 import Projects from './pages/Projects';
 import ProjectMembers from './pages/ProjectMembers';
+import ActivityLogs from './pages/ActivityLogs';
 import AcceptInvite from './pages/AcceptInvite';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -93,6 +94,7 @@ export default function App() {
         <Route path="profile" element={<Profile />} />
         <Route path="projects" element={<AdminRoute><Projects /></AdminRoute>} />
         <Route path="projects/:id/members" element={<AdminRoute><ProjectMembers /></AdminRoute>} />
+        <Route path="activity-logs" element={<AdminRoute><ActivityLogs /></AdminRoute>} />
       </Route>
 
       {/* 404 */}
