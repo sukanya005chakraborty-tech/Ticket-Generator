@@ -199,10 +199,41 @@ const updateProfileSchema = Joi.object({
   'object.min': 'At least one field must be provided for profile update',
 });
 
+const forgotPasswordSchema = Joi.object({
+  email: Joi.string()
+    .trim()
+    .lowercase()
+    .email({ tlds: { allow: true } })
+    .required()
+    .messages({
+      'string.email': 'Please provide a valid email address',
+      'any.required': 'Email is required',
+      'string.empty': 'Email cannot be empty',
+    }),
+});
+
+const resetPasswordSchema = Joi.object({
+  token: Joi.string().required().messages({
+    'any.required': 'Reset token is required',
+    'string.empty': 'Reset token cannot be empty',
+  }),
+  password: passwordField.required(),
+  confirmPassword: Joi.string()
+    .valid(Joi.ref('password'))
+    .required()
+    .messages({
+      'any.only': 'Passwords do not match',
+      'any.required': 'Please confirm your password',
+      'string.empty': 'Confirm password cannot be empty',
+    }),
+});
+
 module.exports = {
   registerSchema,
   loginSchema,
   refreshTokenSchema,
   updatePasswordSchema,
   updateProfileSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 };

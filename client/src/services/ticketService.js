@@ -23,8 +23,8 @@ export const deleteTicket = async (id) => {
   return api.delete(`/tickets/${id}`);
 };
 
-export const exportTicket = async (id) => {
-  return api.get(`/tickets/${id}/export`);
+export const exportTicket = async (id, format = 'json') => {
+  return api.get(`/tickets/${id}/export`, { params: { format } });
 };
 
 export const addComment = async (id, text) => {

@@ -19,3 +19,11 @@ export const getMe = async () => {
 export const refreshToken = async () => {
   return api.post('/auth/refresh-token');
 };
+
+export const forgotPassword = async (email) => {
+  return api.post('/auth/forgot-password', { email });
+};
+
+export const resetPassword = async (token, password, confirmPassword) => {
+  return api.post('/auth/reset-password', { token, password, confirmPassword });
+};

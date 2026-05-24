@@ -112,4 +112,27 @@ async function sendProjectInvite({ to, inviterName, projectName, inviteUrl, expi
   await sendMail({ to, subject, html });
 }
 
-module.exports = { sendMail, sendProjectInvite };
+async function sendPasswordResetEmail({ to, resetUrl, expiresMinutes = 15 }) {
+  const subject = 'Reset your BugForge password';
+  const html = `
+    <div style="font-family:sans-serif;max-width:560px;margin:0 auto;">
+      <h2 style="color:#4f46e5;">Reset your password</h2>
+      <p>We received a request to reset your BugForge password. Click the button below to choose a new one.</p>
+      <p style="margin:24px 0;">
+        <a href="${resetUrl}"
+           style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">
+          Reset Password
+        </a>
+      </p>
+      <p style="color:#6b7280;font-size:13px;">
+        This link expires in ${expiresMinutes} minutes.<br/>
+        If you didn't request this, you can safely ignore this email.
+      </p>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;"/>
+      <p style="color:#9ca3af;font-size:12px;">BugForge — AI Ticket Generator</p>
+    </div>
+  `;
+  await sendMail({ to, subject, html });
+}
+
+module.exports = { sendMail, sendProjectInvite, sendPasswordResetEmail };

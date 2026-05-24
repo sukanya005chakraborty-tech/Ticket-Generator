@@ -202,6 +202,51 @@ async function updateLastLogin(id) {
   await User.findByIdAndUpdate(id, { $set: { lastLoginAt: new Date() } });
 }
 
+/**
+ * Store a hashed password-reset token with expiry.
+ * @param {string} id
+ * @param {string} hashedToken
+ * @param {Date}   expiresAt
+ */
+async function setResetToken(id, hashedToken, expiresAt) {
+  await User.findByIdAndUpdate(id, {
+    $set: { passwordResetToken: hashedToken, passwordResetExpires: expiresAt },
+  });
+}
+
+/**
+ * Find a user whose (non-expired) hashed reset token matches.
+ * @param {string} hashedToken
+ * @returns {Promise<object|null>}
+ */
+async function findByResetToken(hashedToken) {
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+    isDeleted: { $ne: true },
+  })
+    .select('+passwordResetToken +passwordResetExpires')
+    .lean();
+  return user || null;
+}
+
+/**
+ * Update the password via the model instance so the pre-save hook hashes it,
+ * then clear the reset token fields.
+ * @param {string} id
+ * @param {string} newPlainPassword
+ * @returns {Promise<boolean>}
+ */
+async function updatePassword(id, newPlainPassword) {
+  const user = await User.findById(id).select('+password +passwordResetToken +passwordResetExpires');
+  if (!user) return false;
+  user.password = newPlainPassword;
+  user.passwordResetToken = null;
+  user.passwordResetExpires = null;
+  await user.save();
+  return true;
+}
+
 module.exports = {
   findById,
   findByEmail,
@@ -216,4 +261,7 @@ module.exports = {
   removeAllRefreshTokens,
   findByRefreshToken,
   updateLastLogin,
+  setResetToken,
+  findByResetToken,
+  updatePassword,
 };

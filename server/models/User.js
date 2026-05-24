@@ -140,6 +140,17 @@ const userSchema = new Schema(
       default: null,
     },
 
+    passwordResetToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    passwordResetExpires: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+
     // Soft delete
     isDeleted: {
       type: Boolean,

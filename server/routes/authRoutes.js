@@ -4,13 +4,15 @@ const { Router } = require('express');
 const { authenticate } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimiter');
 const { validate } = require('../middleware/validate');
-const { registerSchema, loginSchema } = require('../validators/authValidator');
+const { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } = require('../validators/authValidator');
 const {
   register,
   login,
   refreshToken,
   logout,
   getMe,
+  forgotPassword,
+  resetPassword,
 } = require('../controllers/authController');
 
 const { getInvite, acceptInvite } = require('../controllers/inviteController');
@@ -41,6 +43,14 @@ router.post('/logout', authenticate, logout);
 // GET /api/auth/me
 // Protected — returns current user's profile
 router.get('/me', authenticate, getMe);
+
+// POST /api/auth/forgot-password
+// Public — rate limited; always 200 to prevent enumeration
+router.post('/forgot-password', authLimiter, validate(forgotPasswordSchema), forgotPassword);
+
+// POST /api/auth/reset-password
+// Public — validates token + new password
+router.post('/reset-password', authLimiter, validate(resetPasswordSchema), resetPassword);
 
 // GET  /api/auth/invite?token=xxx  — preview invite (public)
 router.get('/invite', getInvite);

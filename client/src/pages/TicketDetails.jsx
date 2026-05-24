@@ -31,6 +31,7 @@ import Modal from '../components/ui/Modal';
 import TicketForm from '../components/tickets/TicketForm';
 import JsonPreview from '../components/tickets/JsonPreview';
 import { formatDate, formatRelativeTime, copyToClipboard, downloadJSON } from '../utils/helpers';
+import { exportTicket as exportTicketService } from '../services/ticketService';
 
 export default function TicketDetails() {
   const { id } = useParams();
@@ -81,9 +82,15 @@ export default function TicketDetails() {
     setTimeout(() => setRefCopied(false), 2000);
   };
 
-  const handleExport = () => {
-    downloadJSON(ticket, `${ticket.ticketRef}.json`);
-    toast.success('Ticket exported');
+  const handleExport = async (format = 'json') => {
+    try {
+      const response = await exportTicketService(ticket._id, format);
+      const { ticket: data, filename } = response.data;
+      downloadJSON(data, filename);
+      toast.success(`Ticket exported as ${format.toUpperCase()}`);
+    } catch {
+      toast.error('Export failed');
+    }
   };
 
   const handleAddComment = async (e) => {
@@ -136,8 +143,11 @@ export default function TicketDetails() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <Button variant="ghost" size="sm" icon={Download} onClick={handleExport}>
-            Export
+          <Button variant="ghost" size="sm" icon={Download} onClick={() => handleExport('json')}>
+            JSON
+          </Button>
+          <Button variant="ghost" size="sm" icon={Download} onClick={() => handleExport('jira')}>
+            Jira
           </Button>
           <Button variant="secondary" size="sm" icon={Pencil} onClick={() => setEditOpen(true)}>
             Edit

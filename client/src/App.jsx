@@ -16,6 +16,8 @@ import Profile from './pages/Profile';
 import Projects from './pages/Projects';
 import ProjectMembers from './pages/ProjectMembers';
 import AcceptInvite from './pages/AcceptInvite';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 
 function ProtectedRoute({ children }) {
@@ -66,6 +68,8 @@ export default function App() {
           </PublicRoute>
         }
       />
+      <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+      <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
       {/* Accept invite — fully public, no auth required */}
       <Route path="/accept-invite" element={<AcceptInvite />} />
 

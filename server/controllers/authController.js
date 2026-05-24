@@ -127,10 +127,32 @@ const getMe = asyncWrapper(async (req, res) => {
   return res.json(successResponse('Profile retrieved successfully', { user }));
 });
 
+/**
+ * POST /api/auth/forgot-password
+ */
+const forgotPassword = asyncWrapper(async (req, res) => {
+  const { email } = req.body;
+  const origin = req.get('origin') || config.clientUrl;
+  await authService.forgotPassword(email, origin);
+  // Always 200 — never reveal if email exists
+  return res.json(successResponse('If an account with that email exists, a reset link has been sent.'));
+});
+
+/**
+ * POST /api/auth/reset-password
+ */
+const resetPassword = asyncWrapper(async (req, res) => {
+  const { token, password } = req.body;
+  await authService.resetPassword(token, password);
+  return res.json(successResponse('Password reset successfully. Please log in with your new password.'));
+});
+
 module.exports = {
   register,
   login,
   refreshToken,
   logout,
   getMe,
+  forgotPassword,
+  resetPassword,
 };

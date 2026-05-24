@@ -1,9 +1,11 @@
 'use strict';
 
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const config = require('../config/env');
 const logger = require('../config/logger');
 const userRepository = require('../repositories/userRepository');
+const emailService = require('./emailService');
 const { AppError } = require('../middleware/errorHandler');
 
 /**
@@ -255,6 +257,47 @@ async function issueTokens(user) {
   return { accessToken, refreshToken: rt };
 }
 
+const RESET_TOKEN_EXPIRES_MS = 15 * 60 * 1000; // 15 minutes
+
+/**
+ * Generate a password-reset token, store its hash, and email the raw token.
+ * Always resolves without revealing whether the email exists.
+ * @param {string} email
+ * @param {string} origin  - request origin used to build the reset URL
+ */
+async function forgotPassword(email, origin) {
+  const user = await userRepository.findByEmail(email);
+  if (!user) return; // silent — prevent email enumeration
+
+  const rawToken    = crypto.randomBytes(32).toString('hex');
+  const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+  const expiresAt   = new Date(Date.now() + RESET_TOKEN_EXPIRES_MS);
+
+  await userRepository.setResetToken(String(user._id), hashedToken, expiresAt);
+
+  const resetUrl = `${origin}/reset-password?token=${rawToken}`;
+  await emailService.sendPasswordResetEmail({ to: user.email, resetUrl, expiresMinutes: 15 });
+
+  logger.info('[authService] Password reset email sent', { userId: user._id });
+}
+
+/**
+ * Validate a raw reset token and update the user's password.
+ * @param {string} rawToken
+ * @param {string} newPassword  - plain text; model pre-save hook hashes it
+ */
+async function resetPassword(rawToken, newPassword) {
+  const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+  const user = await userRepository.findByResetToken(hashedToken);
+  if (!user) {
+    throw new AppError('Password reset token is invalid or has expired', 400, 'INVALID_RESET_TOKEN');
+  }
+
+  await userRepository.updatePassword(String(user._id), newPassword);
+  logger.info('[authService] Password reset successful', { userId: user._id });
+}
+
 module.exports = {
   register,
   login,
@@ -265,4 +308,6 @@ module.exports = {
   signAccessToken,
   signRefreshToken,
   issueTokens,
+  forgotPassword,
+  resetPassword,
 };

@@ -13,6 +13,7 @@ import JsonPreview from '../components/tickets/JsonPreview';
 import Badge from '../components/ui/Badge';
 import { BROWSER_OPTIONS, DEVICE_OPTIONS, ENVIRONMENT_OPTIONS, EXAMPLE_PROMPTS } from '../utils/constants';
 import { copyToClipboard, downloadJSON } from '../utils/helpers';
+import { exportTicket as exportTicketService } from '../services/ticketService';
 
 const MAX_CHARS = 2000;
 
@@ -89,10 +90,16 @@ export default function GenerateTicket() {
     }
   };
 
-  const handleExport = () => {
-    if (!generatedTicket) return;
-    downloadJSON(generatedTicket, `${generatedTicket.ticketRef || 'ticket'}.json`);
-    toast.success('Ticket exported');
+  const handleExport = async (format = 'json') => {
+    if (!savedId) return;
+    try {
+      const response = await exportTicketService(savedId, format);
+      const { ticket: data, filename } = response.data;
+      downloadJSON(data, filename);
+      toast.success(`Ticket exported as ${format.toUpperCase()}`);
+    } catch {
+      toast.error('Export failed');
+    }
   };
 
   const fillExample = (prompt) => {
@@ -309,8 +316,11 @@ export default function GenerateTicket() {
                   <Button variant="ghost" size="sm" icon={Copy} onClick={handleCopyJSON}>
                     Copy JSON
                   </Button>
-                  <Button variant="ghost" size="sm" icon={Download} onClick={handleExport}>
-                    Export
+                  <Button variant="ghost" size="sm" icon={Download} onClick={() => handleExport('json')}>
+                    JSON
+                  </Button>
+                  <Button variant="ghost" size="sm" icon={Download} onClick={() => handleExport('jira')}>
+                    Jira
                   </Button>
                 </div>
               </div>
